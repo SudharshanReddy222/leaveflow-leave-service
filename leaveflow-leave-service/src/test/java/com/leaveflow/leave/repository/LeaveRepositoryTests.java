@@ -74,6 +74,59 @@ class LeaveRepositoryTests {
     }
 
     @Test
+    void enforcesLeaveBalanceDayConstraints() {
+        leaveBalanceRepository.save(new LeaveBalance(43L, LeaveType.CASUAL, 12, 2, 9));
+
+        assertThrows(DataIntegrityViolationException.class, leaveBalanceRepository::flush);
+    }
+
+    @Test
+    void enforcesLeaveRequestDateConstraint() {
+        leaveRequestRepository.save(new LeaveRequest(
+                43L,
+                LeaveType.CASUAL,
+                LocalDate.of(2026, 12, 7),
+                LocalDate.of(2026, 12, 4),
+                1,
+                "Invalid date range"));
+
+        assertThrows(DataIntegrityViolationException.class, leaveRequestRepository::flush);
+    }
+
+    @Test
+    void enforcesPositiveLeaveRequestDuration() {
+        leaveRequestRepository.save(new LeaveRequest(
+                44L,
+                LeaveType.CASUAL,
+                LocalDate.of(2026, 12, 4),
+                LocalDate.of(2026, 12, 4),
+                0,
+                "Invalid duration"));
+
+        assertThrows(DataIntegrityViolationException.class, leaveRequestRepository::flush);
+    }
+
+    @Test
+    void persistsProcessedByForRejectedRequest() {
+        LeaveRequest request = new LeaveRequest(
+                45L,
+                LeaveType.SICK,
+                LocalDate.of(2026, 12, 4),
+                LocalDate.of(2026, 12, 4),
+                1,
+                "Sick leave");
+        request.setStatus(LeaveStatus.REJECTED);
+        request.setProcessedBy(9L);
+
+        LeaveRequest saved = leaveRequestRepository.saveAndFlush(request);
+
+        assertThat(leaveRequestRepository.findById(saved.getId()))
+                .get()
+                .extracting(LeaveRequest::getProcessedBy)
+                .isEqualTo(9L);
+    }
+
+    @Test
     void usesEmployeeIdAsLeaveGuardPrimaryKey() {
         employeeLeaveGuardRepository.saveAndFlush(new EmployeeLeaveGuard(42L));
 

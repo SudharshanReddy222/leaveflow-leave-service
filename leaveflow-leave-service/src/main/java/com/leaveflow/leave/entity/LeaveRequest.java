@@ -13,11 +13,28 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.Check;
+import org.hibernate.annotations.Checks;
+import org.hibernate.annotations.ColumnDefault;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
+@Checks({
+        @Check(
+                name = "ck_leave_requests_leave_type",
+                constraints = "leave_type IN ('CASUAL', 'SICK', 'EARNED')"),
+        @Check(
+                name = "ck_leave_requests_status",
+                constraints = "status IN ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED')"),
+        @Check(name = "ck_leave_requests_employee_id", constraints = "employee_id > 0"),
+        @Check(
+                name = "ck_leave_requests_processed_by",
+                constraints = "processed_by IS NULL OR processed_by > 0"),
+        @Check(name = "ck_leave_requests_dates", constraints = "end_date >= start_date"),
+        @Check(name = "ck_leave_requests_number_of_days", constraints = "number_of_days > 0")
+})
 @Table(
         name = "leave_requests",
         indexes = {
@@ -56,16 +73,19 @@ public class LeaveRequest {
     private String reason;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "status", nullable = false, length = 20)
+    @ColumnDefault("'PENDING'")
     private LeaveStatus status = LeaveStatus.PENDING;
 
-    @Column(name = "approved_by")
-    private Long approvedBy;
+    @Column(name = "processed_by")
+    private Long processedBy;
 
     @Column(name = "created_at", nullable = false, updatable = false)
+    @ColumnDefault("CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
+    @ColumnDefault("CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
 
     public LeaveRequest(

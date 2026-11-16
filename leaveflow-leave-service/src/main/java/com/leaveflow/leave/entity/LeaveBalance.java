@@ -10,11 +10,31 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import org.hibernate.annotations.Check;
+import org.hibernate.annotations.Checks;
+import org.hibernate.annotations.ColumnDefault;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
+@Checks({
+        @Check(name = "ck_leave_balances_employee_id", constraints = "employee_id > 0"),
+        @Check(
+                name = "ck_leave_balances_leave_type",
+                constraints = "leave_type IN ('CASUAL', 'SICK', 'EARNED')"),
+        @Check(name = "ck_leave_balances_total_days_nonnegative", constraints = "total_days >= 0"),
+        @Check(name = "ck_leave_balances_used_days_nonnegative", constraints = "used_days >= 0"),
+        @Check(
+                name = "ck_leave_balances_available_days_nonnegative",
+                constraints = "available_days >= 0"),
+        @Check(
+                name = "ck_leave_balances_used_days_within_total",
+                constraints = "used_days <= total_days"),
+        @Check(
+                name = "ck_leave_balances_available_days_consistent",
+                constraints = "available_days = total_days - used_days")
+})
 @Table(
         name = "leave_balances",
         uniqueConstraints = @UniqueConstraint(
@@ -41,6 +61,7 @@ public class LeaveBalance {
     private Integer totalDays;
 
     @Column(name = "used_days", nullable = false)
+    @ColumnDefault("0")
     private Integer usedDays;
 
     @Column(name = "available_days", nullable = false)
