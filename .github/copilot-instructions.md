@@ -6,11 +6,12 @@ This microservice handles employee leave applications, approval and leave balanc
 
 ## Technology Stack
 - Java 21
-- Spring Boot 3.5.x
+- Spring Boot 4.1.2
 - Spring Data JPA
 - Hibernate
 - PostgreSQL
 - Apache Kafka
+- Flyway
 - Maven
 - Lombok
 - Bean Validation
@@ -22,6 +23,7 @@ This microservice handles employee leave applications, approval and leave balanc
 
 ## Database
 Database name: leaveflow_leave
+PostgreSQL version: 16
 
 This service owns leave requests and leave balances.
 
